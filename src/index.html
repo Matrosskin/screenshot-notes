@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Canvas tutorial</title>
+    <script type="text/javascript">
+    var y1 = 10;
+    var ctx;
+    var selectRenderStackItem;
+    var renderStackItemControls;
+    var renderStack = [
+      {
+        type: 'CLEAR',
+      },
+      {
+        type: 'RECT',
+        x1: 10,
+        y1: 10,
+        x2: 50,
+        y2: 50,
+        color: "#000000"
+      },
+    ];
+
+      function draw() {
+        renderStack.forEach((it) => {
+          switch (it.type) {
+            case 'CLEAR':
+              ctx.clearRect(0, 0, 150, 150);
+              break;
+            case 'RECT':
+              ctx.fillStyle = it.color;
+              ctx.fillRect(it.x1, it.y1, it.x2, it.y2);
+              break;
+          
+            default:
+              throw new Error('Unknown render stack item type: ' + it.type);
+              break;
+          }
+        });
+      }
+      function updateSelectRSI() {
+        selectRenderStackItem.innerHTML = renderStack.map((it, index) => {
+          return `<option value="${index}">${index} - ${it.type}</option>`
+        }).join('');
+      }
+      function renderItemControls() {
+        var it = renderStack[selectRenderStackItem.value];
+        switch (it.type) {
+          case 'CLEAR':
+            renderStackItemControls.innerHTML = ``;
+            break;
+          case 'RECT':
+            renderStackItemControls.innerHTML = `
+              <button id="up" type="button">up</button>
+              <button id="down" type="button">down</button>
+              <button id="left" type="button">left</button>
+              <button id="right" type="button">right</button>
+              <button id="incWidth" type="button">incWidth</button>
+              <button id="decWidth" type="button">decWidth</button>
+              <button id="incHeight" type="button">incHeight</button>
+              <button id="decHeight" type="button">decHeight</button>
+              <input id="rectColor" type="color" value="#000000">
+            `;
+            document.getElementById("up").addEventListener("click", function () {
+              it.y1 -= 5;
+              draw();
+            });
+            document.getElementById("down").addEventListener("click", function () {
+              it.y1 += 5;
+              draw();
+            });
+            document.getElementById("left").addEventListener("click", function () {
+              it.x1 -= 5;
+              draw();
+            });
+            document.getElementById("right").addEventListener("click", function () {
+              it.x1 += 5;
+              draw();
+            });
+
+            document.getElementById("decHeight").addEventListener("click", function () {
+              it.y2 -= 5;
+              draw();
+            });
+            document.getElementById("incHeight").addEventListener("click", function () {
+              it.y2 += 5;
+              draw();
+            });
+            document.getElementById("decWidth").addEventListener("click", function () {
+              it.x2 -= 5;
+              draw();
+            });
+            document.getElementById("incWidth").addEventListener("click", function () {
+              it.x2 += 5;
+              draw();
+            });
+            document.getElementById("rectColor").addEventListener("change", function () {
+              // NOTE: Event "input" potentially can cause the performance issues
+              // as I do redrawing on any change;
+              it.color = this.value;
+              draw();
+            });
+            break;
+
+          default:
+            throw new Error('Unknown render stack item type: ' + it.type);
+            break;
+        }
+      }
+      function initApp() { 
+        var canvas = document.getElementById('tutorial');
+        if (canvas.getContext) {
+          ctx = canvas.getContext('2d');
+        } else {
+          throw new Error('Canvas is not supported.');
+        }
+
+        draw();
+
+        renderStackItemControls = document.getElementById('renderStackItemControls');
+
+        selectRenderStackItem = document.getElementById('selectRenderStackItem');
+        updateSelectRSI();
+        selectRenderStackItem.addEventListener('change', renderItemControls);
+        var deleteRSI = document.getElementById('deleteRSI')
+        deleteRSI.addEventListener('click', () => {
+          renderStack.splice(selectRenderStackItem.value, 1);
+          updateSelectRSI();
+          renderItemControls();
+          draw();
+        });
+
+        var selectRSIType = document.getElementById('selectRSIType');
+        var addRSI = document.getElementById('addRSI');
+        addRSI.addEventListener('click', () => {
+          switch (selectRSIType.value) {
+            case 'CLEAR':
+              renderStack.push({
+                type: 'CLEAR',
+              });
+              break;
+            case 'RECT':
+              renderStack.push({
+                type: 'RECT',
+                x1: 10,
+                y1: 10,
+                x2: 40,
+                y2: 40,
+                color: "#000000"
+              });
+              break;
+
+            default:
+              throw new Error('Unknown render stack item type: ' + it.type);
+              break;
+          }
+          updateSelectRSI();
+          renderItemControls();
+          draw();
+        });
+
+        
+        // document.getElementById("up").addEventListener("click", function() {
+        //   y1 -= 5;
+        //   draw();
+        // });
+        
+        // document.getElementById("down").addEventListener("click", function() {
+        //   y1 += 5;
+        //   draw();
+        // });
+        
+        // const inputElement = document.getElementById("forCanvas");
+        // inputElement.addEventListener("change", handleFiles, false);
+        // function handleFiles() {
+        //   const fileList = this.files;
+        //   var file = fileList[0];
+        //   createImageBitmap(file).then((img) => {
+        //     ctx.drawImage(img, 0, 0);
+        //   });
+        // }
+      }
+    </script>
+    <style type="text/css">
+      canvas { border: 1px solid black; }
+      button, input, select {
+        height: 62px;
+        min-width: 62px;
+      }
+    </style>
+  </head>
+  <body onload="initApp();">
+    <canvas id="tutorial" width="150" height="150"></canvas>
+    
+    <div>
+      <select name="selectRSIType" id="selectRSIType">
+        <option value="CLEAR">CLEAR</option>
+        <option value="RECT">RECT</option>
+      </select>
+      <button id="addRSI" type="button">Add</button>
+    </div>
+
+    <div>
+      <select name="selectRenderStackItem" id="selectRenderStackItem"></select>
+      <button id="deleteRSI" type="button">Delete</button>
+    </div>
+
+    <div id="renderStackItemControls">
+
+    </div>
+
+    <div>
+      <input type="file" name="forCanvas" id="forCanvas"/>
+    </div>
+  </body>
+</html
